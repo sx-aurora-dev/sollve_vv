@@ -82,6 +82,18 @@ else ifeq ($(DEVICE_TYPE), nvidia)
     CLINK = cc
     CLINKFLAGS += -fopenmp -fopenmp-targets=nvptx64 -Xopenmp-target
   endif
+else ifeq ($(DEVICE_TYPE), rwth)
+  ifeq ($(CC), cc)
+    CFLAGS += -fopenmp -fopenmp-targets=aurora-nec-veort -Xopenmp-target
+    CLINK = cc
+    CLINKFLAGS += -fopenmp -fopenmp-targets=aurora2-nec-veort -Xopenmp-target
+  endif
+else ifeq ($(DEVICE_TYPE), nec)
+  ifeq ($(CC), cc)
+    CFLAGS += -fopenmp -fopenmp-targets=ve-linux -Xopenmp-target
+    CLINK = cc
+    CLINKFLAGS += -fopenmp -fopenmp-targets=ve-linux -Xopenmp-target
+  endif
 endif
 
 # GCC compiler
@@ -115,14 +127,21 @@ endif
 
 # Clang compiler
 ifeq ($(CC), clang)
-  COFFLOADING = -fopenmp-targets=nvptx64-nvidia-cuda -Xopenmp-target -march=sm_70
-  C_NO_OFFLOADING =
-  CFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
-  #Adding this to fix problem with math.h
-  CFLAGS +=  -D__NO_MATH_INLINES -U__SSE2_MATH__ -U__SSE_MATH__
-  CLINK = clang
-  CLINKFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
-  C_VERSION = echo "$(shell $(call loadModules,$(C_COMPILER_MODULE),"shut up") clang --version | head -n 1 | sed 's/clang version \([0-9]*\.[0-9]*\.[0-9]*\)/\1/g')"
+  ifeq ($(DEVICE_TYPE), nvidia)
+    COFFLOADING = -fopenmp-targets=nvptx64-nvidia-cuda -Xopenmp-target -march=sm_70
+    C_NO_OFFLOADING =
+    CFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
+    #Adding this to fix problem with math.h
+    CFLAGS +=  -D__NO_MATH_INLINES -U__SSE2_MATH__ -U__SSE_MATH__
+    CLINK = clang
+    CLINKFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
+    C_VERSION = echo "$(shell $(call loadModules,$(C_COMPILER_MODULE),"shut up") clang --version | head -n 1 | sed 's/clang version \([0-9]*\.[0-9]*\.[0-9]*\)/\1/g')"
+  elif ($(DEVICE_TYPE), nec)
+    # Ths could be for either 'clang' or the 'rvclang' wrapper.
+    COFFLOADING = -fopenmp-targets=ve-linux
+    C_NO_OFFLOADING =
+    CFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
+  endif
 endif
 
 # AOMP compiler
