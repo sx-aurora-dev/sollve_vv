@@ -82,18 +82,6 @@ else ifeq ($(DEVICE_TYPE), nvidia)
     CLINK = cc
     CLINKFLAGS += -fopenmp -fopenmp-targets=nvptx64 -Xopenmp-target
   endif
-else ifeq ($(DEVICE_TYPE), sotoc)
-  ifeq ($(CC), cc)
-    CFLAGS += -fopenmp -fopenmp-targets=aurora-nec-veort -Xopenmp-target
-    CLINK = cc
-    CLINKFLAGS += -fopenmp -fopenmp-targets=aurora-nec-veort -Xopenmp-target
-  endif
-else ifeq ($(DEVICE_TYPE), nec)
-  ifeq ($(CC), cc)
-    CFLAGS += -fopenmp -fopenmp-targets=ve-linux -Xopenmp-target
-    CLINK = cc
-    CLINKFLAGS += -fopenmp -fopenmp-targets=ve-linux -Xopenmp-target
-  endif
 endif
 
 # GCC compiler
@@ -137,8 +125,16 @@ ifeq ($(CC), clang)
     CLINKFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
     C_VERSION = echo "$(shell $(call loadModules,$(C_COMPILER_MODULE),"shut up") clang --version | head -n 1 | sed 's/clang version \([0-9]*\.[0-9]*\.[0-9]*\)/\1/g')"
   else ifeq ($(DEVICE_TYPE), nec)
-    # Ths could be for either 'clang' or the 'rvclang' wrapper.
     COFFLOADING = -fopenmp-targets=ve-linux
+    C_NO_OFFLOADING =
+    CFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
+  else ifeq ($(DEVICE_TYPE), vh)
+    COFFLOADING = --target=ve-linux -fopenmp-targets=x86_64-unknown-linux-gnu
+    C_NO_OFFLOADING = --target=ve-linux
+    CFLAGS += -lm -O3 -fopenmp $(COFFLOADING) -lrt -ldl
+  else ifeq ($(DEVICE_TYPE), x86)
+    # Ths could be for either 'clang' or the 'rvclang' wrapper.
+    COFFLOADING = -fopenmp-targets=x86_64-unknown-linux-gnu
     C_NO_OFFLOADING =
     CFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
   else ifeq ($(DEVICE_TYPE), sotoc)
@@ -197,18 +193,6 @@ ifeq ($(DEVICE_TYPE), amd)
     CXXLINK = cc
     CXXLINKFLAGS += -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx906
   endif
-else ifeq ($(DEVICE_TYPE), sotoc)
-  ifeq ($(CC), cc)
-    CXXFLAGS += -fopenmp -fopenmp-targets=aurora-nec-veort -Xopenmp-target
-    CXXLINK = cc
-    CXXLINKFLAGS += -fopenmp -fopenmp-targets=aurora-nec-veort -Xopenmp-target
-  endif
-else ifeq ($(DEVICE_TYPE), nec)
-  ifeq ($(CC), cc)
-    CXXFLAGS += -fopenmp -fopenmp-targets=ve-linux -Xopenmp-target
-    CXXLINK = cc
-    CXXLINKFLAGS += -fopenmp -fopenmp-targets=ve-linux -Xopenmp-target
-  endif
 else
   # CRAY compiler (NVIDIA)
   ifeq ($(CXX), CC)
@@ -252,6 +236,16 @@ ifeq ($(CXX), clang++)
   ifeq ($(DEVICE_TYPE), nec)
     # Ths could be for either 'clang' or the 'rvclang' wrapper.
     CXXOFFLOADING = -fopenmp-targets=ve-linux
+    CXX_NO_OFFLOADING =
+    CXXFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
+  else ifeq ($(DEVICE_TYPE), vh)
+    # Ths could be for either 'clang' or the 'rvclang' wrapper.
+    CXXOFFLOADING = -fopenmp-targets=x86_64-unknown-linux-gnu --target=ve-linux
+    CXX_NO_OFFLOADING = -target=ve-linux
+    CXXFLAGS += -lm -O3 -fopenmp $(COFFLOADING) -lrt -ldl
+  else ifeq ($(DEVICE_TYPE), x86)
+    # Ths could be for either 'clang' or the 'rvclang' wrapper.
+    CXXOFFLOADING = -fopenmp-targets=x86_64-unknown-linux-gnu
     CXX_NO_OFFLOADING =
     CXXFLAGS += -lm -O3 -fopenmp $(COFFLOADING)
   else ifeq ($(DEVICE_TYPE), sotoc)
